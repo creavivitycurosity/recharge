@@ -46,7 +46,7 @@ export type ResolvedCustomerSession = {
 };
 
 const DEMO_BYPASS_EMAIL = "demo-customer@rechargeapps.com";
-const DEMO_BYPASS_CUSTOMER_ID = "252481964";
+const DEMO_BYPASS_CUSTOMER_ID = "244405691";
 // The demo-bypass session carries this placeholder in place of a real,
 // Recharge-issued customer apiToken. Storefront-client SDK calls authenticate
 // with the customer token, so they cannot be made from a demo-bypass session.
