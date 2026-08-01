@@ -1,0 +1,53 @@
+name: Keep Render instance awake
+
+# Render free web services spin down after ~15 minutes of inactivity and take
+# 50-90s to cold start. This pings the app often enough to keep it running.
+#
+# Setup: add a repository variable named PING_URL pointing at the deployed
+# login page, e.g. https://recharge.onrender.com/login
+#   Settings -> Secrets and variables -> Actions -> Variables -> New variable
+#
+# Ping /login rather than /, which returns a 302 redirect.
+#
+# NOTE: on a private repo every run consumes Actions minutes (rounded up to a
+# full minute), so a 10-minute cadence exceeds the 2000 min/month free quota.
+# Make the repo public, or use an external pinger instead.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+# Don't pile up runs if one is slow (a cold start can take 90s).
+concurrency:
+  group: keep-awake
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the app
+        env:
+          PING_URL: ${{ vars.PING_URL }}
+        run: |
+          if [ -z "$PING_URL" ]; then
+            echo "PING_URL is not set — skipping. Add it as a repository variable."
+            exit 0
+          fi
+
+          # --retry covers the cold start: the first request can time out while
+          # the container boots, and the retry lands once it is up.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --max-time 120 \
+            --retry 3 --retry-delay 20 --retry-all-errors \
+            "$PING_URL")
+
+          echo "HTTP $code from $PING_URL"
+
+          # 2xx/3xx means the server answered, which is all we need.
+          case "$code" in
+            2*|3*) echo "Instance is awake." ;;
+            *) echo "::error::Unexpected status $code"; exit 1 ;;
+          esac
