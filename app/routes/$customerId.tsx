@@ -133,6 +133,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
       for (const selection of allBundleSelections) {
         const { charge_id, ...bundleSelection } = selection;
+        // Not bound to a charge (store without future charge manipulation) —
+        // there's no delivery to file it under, so leave that week empty.
+        if (charge_id === null) continue;
         const existing = bundleSelectionsByCharge.get(charge_id);
         if (existing) {
           existing.push(bundleSelection);
@@ -146,11 +149,13 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
         bundleSelections: bundleSelectionsByCharge.get(charge.id) ?? [],
       }));
     } catch {
-      // Fallback for stores where purchase_item_ids is unavailable.
+      // Fallback for stores where purchase_item_ids is unavailable. The
+      // charge_ids filter is gated on some stores, so treat a failure here as
+      // "no selections for this week" instead of taking the dashboard down.
       chargesBundleCheck = await Promise.all(
         activeCharges.map(async (charge) => ({
           charge,
-          bundleSelections: await getBundleSelections(charge.id),
+          bundleSelections: await getBundleSelections(charge.id).catch(() => []),
         }))
       );
     }

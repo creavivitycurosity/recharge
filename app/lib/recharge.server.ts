@@ -238,12 +238,15 @@ export async function getBundleSelections(chargeId: number): Promise<BundleSelec
 }
 
 const BundleSelectionWithChargeIdSchema = BundleSelectionSchema.extend({
-  charge_id: z.number(),
+  // Stores without future charge manipulation don't bind selections to an
+  // individual charge, so this comes back null. Callers skip those rather than
+  // failing the whole dashboard.
+  charge_id: z.number().nullable(),
 });
 
 export async function listBundleSelectionsByPurchaseItemIds(
   purchaseItemIds: number[]
-): Promise<Array<BundleSelection & { charge_id: number }>> {
+): Promise<Array<BundleSelection & { charge_id: number | null }>> {
   const uniqueIds = [...new Set(purchaseItemIds)];
   if (uniqueIds.length === 0) return [];
 
