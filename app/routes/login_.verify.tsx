@@ -8,7 +8,7 @@ import {
   startPasswordlessLogin,
 } from "~/lib/auth.server";
 
-export const meta: MetaFunction = () => [{ title: "Verify code — Recharge Meals" }];
+export const meta: MetaFunction = () => [{ title: "Verify code — Slimmer Meals" }];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const cookie = await getSession(request.headers.get("Cookie"));
@@ -100,8 +100,8 @@ export default function VerifyPage() {
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-warm-lg border border-stone-100 p-8 sm:p-10">
           <div className="flex justify-center mb-6">
             <img
-              src="/logo.png"
-              alt="Recharge Meals"
+              src="/logo.svg"
+              alt="Slimmer Meals"
               className="h-14 sm:h-16 w-auto"
             />
           </div>

@@ -21,7 +21,7 @@ import {
 } from "~/lib/auth.server";
 import type { Address, Customer, PaymentMethod, Subscription } from "~/lib/types";
 
-export const meta: MetaFunction = () => [{ title: "NourishBox — My Account" }];
+export const meta: MetaFunction = () => [{ title: "Slimmer Meals — My Account" }];
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
 

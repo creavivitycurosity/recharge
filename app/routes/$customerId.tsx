@@ -39,7 +39,7 @@ import { DEFAULT_DELIVERY_OFFSET, DEFAULT_MODIFICATION_WINDOW, LEGACY_BUNDLE_VAR
 import type { Address, BundleCollection, BundleSelection, BundleSelectionItem, Charge, ChargeLineItem, CreditSummary, Customer, Subscription } from "~/lib/types";
 import { formatCurrency, formatDate, setStoreCurrency } from "~/lib/utils";
 
-export const meta: MetaFunction = () => [{ title: "NourishBox — My Deliveries" }];
+export const meta: MetaFunction = () => [{ title: "Slimmer Meals — My Deliveries" }];
 
 // Week buckets must line up with the merchant portal, which starts its weeks on
 // the plan's charge creation day (see merchant.tsx). Hardcoding Monday here
@@ -1749,8 +1749,8 @@ function Header({
           <div className="flex items-center gap-3">
             <Link to="/" className="flex items-center group">
               <img
-                src="/logo.png"
-                alt="Recharge Meals"
+                src="/logo.svg"
+                alt="Slimmer Meals"
                 className="h-12 sm:h-14 w-auto group-hover:scale-[1.02] transition-transform"
               />
             </Link>

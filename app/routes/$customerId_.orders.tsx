@@ -6,7 +6,7 @@ import { requireCustomerOwnsId } from "~/lib/auth.server";
 import { formatCurrency, formatDate } from "~/lib/utils";
 import type { Charge, ChargeLineItem } from "~/lib/types";
 
-export const meta: MetaFunction = () => [{ title: "NourishBox — Previous Orders" }];
+export const meta: MetaFunction = () => [{ title: "Slimmer Meals — Previous Orders" }];
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
 
