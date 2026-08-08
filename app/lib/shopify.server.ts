@@ -45,6 +45,25 @@ async function shopifyFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function shopifyGraphql<T>(query: string): Promise<T> {
+  const token = await getAccessToken();
+  const domain = process.env.SHOPIFY_STORE_DOMAIN!;
+  const res = await fetch(`https://${domain}/admin/api/2025-01/graphql.json`, {
+    method: "POST",
+    headers: { "X-Shopify-Access-Token": token, "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) {
+    throw new Error(`Shopify GraphQL ${res.status}: ${await res.text()}`);
+  }
+  const json = (await res.json()) as { data?: T; errors?: unknown };
+  // GraphQL reports failures in the body with a 200 status.
+  if (json.errors || !json.data) {
+    throw new Error(`Shopify GraphQL errors: ${JSON.stringify(json.errors)}`);
+  }
+  return json.data;
+}
+
 async function shopifyMutate<T>(path: string, method: "POST" | "PUT", body: unknown): Promise<T> {
   const token = await getAccessToken();
   const domain = process.env.SHOPIFY_STORE_DOMAIN!;
@@ -126,16 +145,43 @@ const ShopifyCollectionSchema = z.object({
   id: z.number(),
   title: z.string(),
   handle: z.string(),
+  // Null when the count could not be fetched — the UI then shows nothing rather
+  // than claiming a collection is empty.
+  productsCount: z.number().nullable().optional(),
 });
 
 export type ShopifyCollection = z.infer<typeof ShopifyCollectionSchema>;
 
+// The REST list endpoint omits products_count, and several collections in a
+// typical store are empty — assigning one to a week publishes a menu with no
+// meals in it. Fetch the counts in a single GraphQL call so the merchant can
+// see which collections are worth picking.
+async function fetchCollectionProductCounts(): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  try {
+    const data = await shopifyGraphql<{
+      collections: { edges: Array<{ node: { id: string; productsCount: { count: number } | null } }> };
+    }>(`{ collections(first: 250) { edges { node { id productsCount { count } } } } }`);
+
+    for (const { node } of data.collections.edges) {
+      const numericId = node.id.split("/").pop();
+      if (numericId && node.productsCount) counts.set(numericId, node.productsCount.count);
+    }
+  } catch {
+    // Counts are advisory — a failure here shouldn't block the collection list.
+  }
+  return counts;
+}
+
 export async function listBundleCollections(): Promise<ShopifyCollection[]> {
-  const data = await shopifyFetch<{ custom_collections: unknown[] }>(
-    `/custom_collections.json?fields=id,title,handle&published_status=published&limit=250`
-  );
+  const [data, counts] = await Promise.all([
+    shopifyFetch<{ custom_collections: unknown[] }>(
+      `/custom_collections.json?fields=id,title,handle&published_status=published&limit=250`
+    ),
+    fetchCollectionProductCounts(),
+  ]);
   const collections = z.array(ShopifyCollectionSchema).parse(data.custom_collections);
-  return collections;
+  return collections.map((c) => ({ ...c, productsCount: counts.get(String(c.id)) ?? null }));
 }
 
 // ─── Customer tags ──────────────────────────────────────────────────────────
