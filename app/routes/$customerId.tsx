@@ -11,6 +11,7 @@ import {
   deleteOnetime,
   getBundleCollectionsFromShopify,
   getBundleProductInfo,
+  listPlans,
   getBundleSelections,
   getCharge,
   listBundleProducts,
@@ -40,11 +41,13 @@ import { formatCurrency, formatDate, setStoreCurrency } from "~/lib/utils";
 
 export const meta: MetaFunction = () => [{ title: "NourishBox — My Deliveries" }];
 
-function getMondayOf(dateStr: string): string {
+// Week buckets must line up with the merchant portal, which starts its weeks on
+// the plan's charge creation day (see merchant.tsx). Hardcoding Monday here
+// silently breaks the menu lookup on stores that create charges on another day.
+function getWeekStartOf(dateStr: string, weekStartDayJs: number): string {
   const d = new Date(dateStr.slice(0, 10) + "T00:00:00");
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
+  const diff = (d.getDay() - weekStartDayJs + 7) % 7;
+  d.setDate(d.getDate() - diff);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
@@ -341,7 +344,18 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       const uniqueProductIds = [...new Set(bundleSelections.map((bs) => bs.external_product_id).filter(Boolean))] as string[];
       const bundleProductInfoList = await Promise.all(uniqueProductIds.map(getBundleProductInfo));
 
-      const weekStart = getMondayOf(charge.scheduled_at);
+      // Plan field is MySQL WEEKDAY (0=Mon..6=Sun); JS getDay is (0=Sun..6=Sat).
+      // Same conversion and Monday fallback the merchant portal uses.
+      const weekStartDayJs = await listPlans({ externalVariantId: activeBundleVariantId })
+        .then((plans) => plans.find((p) => typeof p.charge_creation_day_of_week === "number"))
+        .then((plan) =>
+          typeof plan?.charge_creation_day_of_week === "number"
+            ? (plan.charge_creation_day_of_week + 1) % 7
+            : 1
+        )
+        .catch(() => 1);
+
+      const weekStart = getWeekStartOf(charge.scheduled_at, weekStartDayJs);
       const activeBundleProductId =
         bundleProducts.find((p) =>
           p.variants.some((v) => v.external_variant_id === activeBundleVariantId)
