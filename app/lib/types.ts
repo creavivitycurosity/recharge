@@ -194,6 +194,12 @@ export const BundleProductVariantSchema = z.object({
   id: z.number(),
   external_variant_id: z.string(),
   title: z.string(),
+  // The collections Recharge will accept selections from. Saving an item from
+  // any other collection fails with "Collection ID not found in product
+  // configuration", so the merchant portal surfaces these.
+  option_sources: z
+    .array(z.object({ option_source_id: z.string() }))
+    .optional(),
 });
 
 export type BundleProductVariant = z.infer<typeof BundleProductVariantSchema>;
