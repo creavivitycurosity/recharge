@@ -962,6 +962,16 @@ function AssignPanel({
 
   const hasChanges = selected !== assignedId;
 
+  // Saving leaves the button disabled (no pending changes), which on its own
+  // reads as "nothing happened". Confirm it explicitly, then fade out.
+  const [justSaved, setJustSaved] = useState(false);
+  useEffect(() => {
+    if (!savedOk) return;
+    setJustSaved(true);
+    const timer = setTimeout(() => setJustSaved(false), 4000);
+    return () => clearTimeout(timer);
+  }, [savedOk]);
+
   const choose = (id: string) => {
     setSelected((prev) => (prev === id ? null : id));
   };
@@ -1080,13 +1090,31 @@ function AssignPanel({
         <p className="text-xs text-gray-400">
           Assigned collections will appear in the Sort Order & Defaults view for this week.
         </p>
-        <button
-          onClick={handleSave}
-          disabled={isSaving || !hasChanges}
-          className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-none"
-        >
-          {isSaving ? "Saving…" : "Save assignments"}
-        </button>
+        <div className="flex items-center gap-3 flex-none">
+          {justSaved && (
+            <span className="text-sm font-medium text-green-600 flex items-center gap-1 animate-fade-in">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Saved
+            </span>
+          )}
+          {saveError && (
+            <span className="text-sm font-medium text-red-600 flex items-center gap-1.5">
+              <svg className="w-4 h-4 flex-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {saveError}
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !hasChanges}
+            className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isSaving ? "Saving…" : "Save assignments"}
+          </button>
+        </div>
       </div>
     </div>
   );
