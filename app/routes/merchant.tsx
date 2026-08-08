@@ -46,7 +46,7 @@ import {
 import { DEFAULT_DELIVERY_OFFSET, DEFAULT_MODIFICATION_WINDOW } from "~/lib/bundle-config";
 import type { BundleCollection } from "~/lib/types";
 
-export const meta: MetaFunction = () => [{ title: "Merchant Portal — Weekly Collections" }];
+export const meta: MetaFunction = () => [{ title: "Merchant Portal — Slimmer Meals" }];
 
 async function resolveBundleProductId(externalVariantId: string): Promise<number | null> {
   const products = await listBundleProducts();
@@ -490,13 +490,8 @@ export default function MerchantPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center flex-none">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-              </svg>
-            </div>
+            <img src="/logo.svg" alt="Slimmer Meals" className="h-7 w-auto flex-none" />
             <span className="text-sm font-semibold text-gray-900">Merchant Portal</span>
-            <span className="text-xs bg-amber-100 text-amber-700 font-medium px-1.5 py-0.5 rounded">Demo</span>
           </div>
           <Link
             to="/"
