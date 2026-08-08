@@ -36,7 +36,7 @@ import {
 import { getAddonCollectionIds } from "~/lib/addon-collections.server";
 import { DEFAULT_DELIVERY_OFFSET, DEFAULT_MODIFICATION_WINDOW, LEGACY_BUNDLE_VARIANT_ID } from "~/lib/bundle-config";
 import type { Address, BundleCollection, BundleSelection, BundleSelectionItem, Charge, ChargeLineItem, CreditSummary, Customer, Subscription } from "~/lib/types";
-import { formatCurrency, formatDate } from "~/lib/utils";
+import { formatCurrency, formatDate, setStoreCurrency } from "~/lib/utils";
 
 export const meta: MetaFunction = () => [{ title: "NourishBox — My Deliveries" }];
 
@@ -753,6 +753,11 @@ export default function Dashboard() {
     addresses,
   } =
     useLoaderData<typeof loader>();
+
+  // Prices render in the store's currency, not the USD fallback. Charges carry
+  // it, so take it from the first one we have.
+  setStoreCurrency(activeCharge?.currency ?? activeCharges[0]?.currency);
+
   const { revalidate, state } = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigation = useNavigation();

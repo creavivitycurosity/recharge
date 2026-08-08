@@ -86,7 +86,8 @@ export default function VerifyPage() {
     typeof navigation.formData?.get === "function"
       ? String(navigation.formData?.get("intent") ?? "verify")
       : "verify";
-  const isVerifying = navigation.state === "submitting" && submittedIntent === "verify";
+  // Includes "loading" so the spinner survives the redirect into the dashboard.
+  const isVerifying = navigation.state !== "idle" && submittedIntent === "verify";
   const isResending = navigation.state === "submitting" && submittedIntent === "resend";
 
   return (

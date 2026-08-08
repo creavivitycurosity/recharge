@@ -331,7 +331,9 @@ export async function getBundleProductInfo(externalProductId: string): Promise<{
       seenIds.add(r.id);
       return true;
     })
-    .map((r) => [r.quantity_min, r.quantity_max]);
+    // Recharge leaves quantity_max null when a bundle has no upper limit. The
+    // UI needs a number — without this the range renders as "5-0".
+    .map((r) => [r.quantity_min, r.quantity_max ?? r.quantity_min]);
 
   return { collectionIds, quantityRanges };
 }

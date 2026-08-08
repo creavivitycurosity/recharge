@@ -7,11 +7,20 @@ export function formatDate(dateStr: string): string {
   });
 }
 
-export function formatCurrency(amount: string | number, currency = "USD"): string {
+// The portal serves a single store, so its currency is constant for the whole
+// app. Rather than thread it through every price in the tree, record it once
+// from loader data and let formatCurrency fall back to it.
+let storeCurrency = "USD";
+
+export function setStoreCurrency(currency: string | null | undefined): void {
+  if (currency) storeCurrency = currency;
+}
+
+export function formatCurrency(amount: string | number, currency?: string | null): string {
   const value = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-GB", {
     style: "currency",
-    currency,
+    currency: currency || storeCurrency,
     minimumFractionDigits: 2,
   }).format(value);
 }

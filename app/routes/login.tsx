@@ -66,7 +66,9 @@ export default function LoginPage() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const [searchParams] = useSearchParams();
-  const isSubmitting = navigation.state === "submitting";
+  // Stay pending through the redirect too — the dashboard loader takes a few
+  // seconds, and dropping back to "idle" at the 302 makes the click look ignored.
+  const isSubmitting = navigation.state !== "idle";
 
   const reason = searchParams.get("reason");
   const next = searchParams.get("next") ?? "";
