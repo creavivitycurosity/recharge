@@ -87,21 +87,31 @@
 /* ─── Meal description popup ──────────────────────────────────────────────────
    Shopify product body_html ships a nutrition grid and an ingredients table
    using the storefront theme's class names; the theme's CSS doesn't exist
-   here, so style those classes for the dashboard's info popup. */
+   here, so style those classes for the dashboard's info popup. Mobile mirrors
+   the storefront: stats two-up with the fifth full-width; one row of five on
+   larger screens. */
 .meal-desc .custom-html { width: 100%; }
 .meal-desc .nutrition-grid-container {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   background: #f3e9d6;
   border-radius: 12px;
-  padding: 16px 4px;
+  padding: 14px 4px;
   margin-bottom: 18px;
 }
-.meal-desc .nutrition-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; text-align: center; padding: 2px 6px; }
-.meal-desc .nutrition-card + .nutrition-card { border-left: 1px solid #e3d6b8; }
+.meal-desc .nutrition-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; text-align: center; padding: 8px 6px; }
+.meal-desc .nutrition-card:nth-child(2n) { border-left: 1px solid #e3d6b8; }
+.meal-desc .nutrition-card:nth-child(n+3) { border-top: 1px solid #e3d6b8; }
+.meal-desc .nutrition-card:nth-child(5) { grid-column: 1 / -1; border-left: 0; }
+@media (min-width: 640px) {
+  .meal-desc .nutrition-grid-container { grid-template-columns: repeat(5, 1fr); padding: 16px 4px; }
+  .meal-desc .nutrition-card { padding: 2px 6px; }
+  .meal-desc .nutrition-card:nth-child(n) { border-top: 0; grid-column: auto; }
+  .meal-desc .nutrition-card + .nutrition-card { border-left: 1px solid #e3d6b8; }
+}
 .meal-desc .nutrition-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #8a7c62; font-weight: 600; }
 .meal-desc .nutrition-value { font-size: 15px; font-weight: 700; color: #1c1917; line-height: 1.2; }
-.meal-desc .ingredients-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1c1917; margin: 0 0 8px; }
+.meal-desc .ingredients-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #1c1917; margin: 18px 0 8px; }
 .meal-desc .ingredients-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .meal-desc .ingredients-table tr:nth-child(odd) { background: #faf7f1; }
 .meal-desc .ingredients-table td { padding: 8px 10px; color: #57534e; }
