@@ -2621,7 +2621,7 @@ function MealGrid({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setInfoItem(item); }}
                   aria-label={`About ${item.productTitle}`}
-                  className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-white/90 text-stone-500 hover:text-brand-700 hover:bg-white shadow-warm-sm flex items-center justify-center transition-colors"
+                  className="absolute top-2 left-2 w-6 h-6 rounded-full bg-white/90 text-stone-500 hover:text-brand-700 hover:bg-white shadow-warm-sm flex items-center justify-center transition-colors"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
