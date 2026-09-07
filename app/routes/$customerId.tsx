@@ -2758,7 +2758,7 @@ function MealGrid({
       {infoItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true" aria-label={infoItem.productTitle}>
           <div className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setInfoItem(null)} />
-          <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-warm-lg overflow-hidden animate-slide-up max-h-[88vh] flex flex-col">
+          <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-warm-lg overflow-hidden animate-slide-up max-h-[88vh] flex flex-col">
             <button
               type="button"
               onClick={() => setInfoItem(null)}
@@ -2777,7 +2777,7 @@ function MealGrid({
               )}
             </div>
 
-            <div className="md:grid md:grid-cols-2 md:gap-6 px-6 pb-6 overflow-y-auto">
+            <div className="md:grid md:grid-cols-[45%_55%] md:gap-6 px-6 pb-6 overflow-y-auto">
               <div>
                 {infoItem.imageUrl ? (
                   <img src={infoItem.imageUrl} alt={infoItem.productTitle} className="w-full aspect-square object-cover rounded-2xl" />
