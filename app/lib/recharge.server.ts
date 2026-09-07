@@ -276,6 +276,7 @@ export async function getBundleCollectionsFromShopify(
           external_product_id: String(p.id),
           title: p.title,
           image_url: p.image?.src ?? null,
+          description: p.body_html ?? null,
           tags: p.tags ?? [],
           variants: p.variants.map((v) => ({
             id: v.id,
