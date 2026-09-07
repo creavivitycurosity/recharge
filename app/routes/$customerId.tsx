@@ -2306,7 +2306,6 @@ type EditableItem = {
   variantTitle: string;
   imageUrl: string | null;
   description: string | null;
-  price: string | null;
   tags: string[];
 };
 
@@ -2382,7 +2381,6 @@ function buildEditableItems(
           variantTitle: variant.title,
           imageUrl: product.image_url ?? null,
           description: product.description ?? null,
-          price: variant.price ?? null,
           tags: product.tags ?? [],
         });
       }
@@ -2401,7 +2399,6 @@ function buildEditableItems(
         variantTitle: `Variant #${item.external_variant_id.split("/").pop()}`,
         imageUrl: null,
         description: null,
-        price: null,
         tags: [],
       });
     }
@@ -2753,52 +2750,41 @@ function MealGrid({
       )}
 
       {/* Meal description popup. body_html is the merchant's own Shopify
-          product content (nutrition grid + ingredients table with theme CSS
-          classes) — .meal-desc in tailwind.css styles those classes here. */}
+          product content — same trust level as rendering it on the storefront. */}
       {infoItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true" aria-label={infoItem.productTitle}>
           <div className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setInfoItem(null)} />
-          <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-warm-lg overflow-hidden animate-slide-up max-h-[88vh] flex flex-col">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-warm-lg overflow-hidden animate-slide-up max-h-[85vh] flex flex-col">
             <button
               type="button"
               onClick={() => setInfoItem(null)}
               aria-label="Close"
-              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 text-stone-500 hover:text-stone-800 shadow-warm-sm flex items-center justify-center transition-colors"
+              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 text-stone-500 hover:text-stone-800 shadow-warm-sm flex items-center justify-center transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-
-            <div className="px-6 pt-6 pb-4 flex-none">
-              <h3 className="font-display text-2xl font-bold text-stone-900 pr-10">{infoItem.productTitle}</h3>
-              {infoItem.price && (
-                <p className="text-sm text-stone-500 mt-0.5">{formatCurrency(infoItem.price)}</p>
+            {infoItem.imageUrl && (
+              <img src={infoItem.imageUrl} alt={infoItem.productTitle} className="w-full aspect-[4/3] object-cover flex-none" />
+            )}
+            <div className="p-6 overflow-y-auto">
+              <h3 className="font-display text-xl font-bold text-stone-900">{infoItem.productTitle}</h3>
+              {infoItem.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {infoItem.tags.map((tag) => (
+                    <span key={tag} className="badge bg-stone-100 text-stone-600 text-[10px]">{tag}</span>
+                  ))}
+                </div>
               )}
-            </div>
-
-            <div className="md:grid md:grid-cols-2 md:gap-6 px-6 pb-6 overflow-y-auto">
-              <div>
-                {infoItem.imageUrl ? (
-                  <img src={infoItem.imageUrl} alt={infoItem.productTitle} className="w-full aspect-square object-cover rounded-2xl" />
-                ) : (
-                  <div className="w-full aspect-square rounded-2xl bg-stone-100" />
-                )}
-                {infoItem.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {infoItem.tags.map((tag) => (
-                      <span key={tag} className="badge bg-stone-100 text-stone-600 text-[10px]">{tag}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="mt-5 md:mt-0">
-                {infoItem.description ? (
-                  <div className="meal-desc" dangerouslySetInnerHTML={{ __html: infoItem.description }} />
-                ) : (
-                  <p className="text-sm text-stone-400">No description available for this meal yet.</p>
-                )}
-              </div>
+              {infoItem.description ? (
+                <div
+                  className="mt-3 text-sm text-stone-600 leading-relaxed [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-4"
+                  dangerouslySetInnerHTML={{ __html: infoItem.description }}
+                />
+              ) : (
+                <p className="mt-3 text-sm text-stone-400">No description available for this meal yet.</p>
+              )}
             </div>
           </div>
         </div>
