@@ -2305,7 +2305,6 @@ type EditableItem = {
   productTitle: string;
   variantTitle: string;
   imageUrl: string | null;
-  description: string | null;
   tags: string[];
 };
 
@@ -2380,7 +2379,6 @@ function buildEditableItems(
           productTitle: product.title,
           variantTitle: variant.title,
           imageUrl: product.image_url ?? null,
-          description: product.description ?? null,
           tags: product.tags ?? [],
         });
       }
@@ -2398,7 +2396,6 @@ function buildEditableItems(
         productTitle: `Product #${item.external_product_id.split("/").pop()}`,
         variantTitle: `Variant #${item.external_variant_id.split("/").pop()}`,
         imageUrl: null,
-        description: null,
         tags: [],
       });
     }
@@ -2441,8 +2438,6 @@ function MealGrid({
     () => Object.fromEntries(bundleSelection.items.map((i) => [i.external_variant_id, i.quantity]))
   );
   const [errorDismissed, setErrorDismissed] = useState(false);
-  // Meal whose description popup is open, if any.
-  const [infoItem, setInfoItem] = useState<EditableItem | null>(null);
   const submittedQtyRef = useRef<Record<string, number>>({});
 
   const isSaving = fetcher.state !== "idle";
@@ -2613,18 +2608,6 @@ function MealGrid({
                   </div>
                 )}
 
-                {/* Info popup trigger */}
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setInfoItem(item); }}
-                  aria-label={`About ${item.productTitle}`}
-                  className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-white/90 text-stone-500 hover:text-brand-700 hover:bg-white shadow-warm-sm flex items-center justify-center transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-
                 {/* Preference badge */}
                 {isPrefExclude && (
                   <div className="absolute top-2 left-2">
@@ -2745,47 +2728,6 @@ function MealGrid({
                 "Save Selections"
               )}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Meal description popup. body_html is the merchant's own Shopify
-          product content — same trust level as rendering it on the storefront. */}
-      {infoItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8" role="dialog" aria-modal="true" aria-label={infoItem.productTitle}>
-          <div className="absolute inset-0 bg-stone-900/50 backdrop-blur-sm animate-fade-in" onClick={() => setInfoItem(null)} />
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-warm-lg overflow-hidden animate-slide-up max-h-[85vh] flex flex-col">
-            <button
-              type="button"
-              onClick={() => setInfoItem(null)}
-              aria-label="Close"
-              className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 text-stone-500 hover:text-stone-800 shadow-warm-sm flex items-center justify-center transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            {infoItem.imageUrl && (
-              <img src={infoItem.imageUrl} alt={infoItem.productTitle} className="w-full aspect-[4/3] object-cover flex-none" />
-            )}
-            <div className="p-6 overflow-y-auto">
-              <h3 className="font-display text-xl font-bold text-stone-900">{infoItem.productTitle}</h3>
-              {infoItem.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {infoItem.tags.map((tag) => (
-                    <span key={tag} className="badge bg-stone-100 text-stone-600 text-[10px]">{tag}</span>
-                  ))}
-                </div>
-              )}
-              {infoItem.description ? (
-                <div
-                  className="mt-3 text-sm text-stone-600 leading-relaxed [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-4"
-                  dangerouslySetInnerHTML={{ __html: infoItem.description }}
-                />
-              ) : (
-                <p className="mt-3 text-sm text-stone-400">No description available for this meal yet.</p>
-              )}
-            </div>
           </div>
         </div>
       )}
