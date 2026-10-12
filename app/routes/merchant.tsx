@@ -166,25 +166,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  // Recharge only accepts selections from collections registered as option
-  // sources on the active bundle variant. Assigning any other collection saves
-  // here but then fails on the customer's first save, so mark them up front.
-  const allowedCollectionIds = new Set(
-    bundleProducts
-      .flatMap((p) => p.variants)
-      .filter((v) => v.external_variant_id === currentBundleVariantId)
-      .flatMap((v) => v.option_sources ?? [])
-      .map((s) => s.option_source_id)
-  );
-
   const allCollections = shopifyCollections.map((c) => ({
     id: String(c.id),
     title: c.title,
     handle: c.handle,
-    productsCount: c.productsCount ?? null,
-    // Unknown (rather than false) when the bundle exposes no option sources at
-    // all — don't warn about everything on stores that don't use them.
-    acceptedByBundle: allowedCollectionIds.size === 0 ? null : allowedCollectionIds.has(String(c.id)),
   }));
 
   const assignedPerWeek: Record<string, string | null> = {};
@@ -922,8 +907,6 @@ type SimpleCollection = {
   id: string;
   title: string;
   handle: string;
-  productsCount?: number | null;
-  acceptedByBundle?: boolean | null;
 };
 
 function AssignPanel({
@@ -1051,23 +1034,6 @@ function AssignPanel({
                   <p className="text-sm font-medium text-gray-800">{collection.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs text-gray-400">{collection.handle}</span>
-                    {/* Assigning an empty collection publishes a week with no
-                        meals in it, so call that out before it's picked. */}
-                    {collection.productsCount === 0 ? (
-                      <span className="text-xs font-medium text-amber-600">· empty</span>
-                    ) : typeof collection.productsCount === "number" ? (
-                      <span className="text-xs text-gray-400">
-                        · {collection.productsCount} product{collection.productsCount === 1 ? "" : "s"}
-                      </span>
-                    ) : null}
-                    {collection.acceptedByBundle === false && (
-                      <span
-                        className="text-xs font-medium text-red-600"
-                        title="This bundle isn't configured to accept selections from this collection — customers would see the meals but saving would fail."
-                      >
-                        · not accepted by bundle
-                      </span>
-                    )}
                   </div>
                 </div>
                 {isSelected && (
