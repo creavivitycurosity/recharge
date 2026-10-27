@@ -15,6 +15,8 @@ export type CustomerSession = {
   pendingEmail?: string;
   pendingSessionToken?: string;
   flashError?: string;
+  // "1" once the merchant password has been entered in this browser session.
+  merchantUnlocked?: string;
 };
 
 export const sessionStorage = createCookieSessionStorage<CustomerSession>({

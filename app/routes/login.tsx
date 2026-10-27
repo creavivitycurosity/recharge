@@ -1,12 +1,10 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
 import {
-  buildDemoBypassSession,
   commitSession,
   getOptionalCustomer,
   getSession,
-  isDemoBypassEmail,
   startPasswordlessLogin,
 } from "~/lib/auth.server";
 
@@ -34,23 +32,17 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ error: "Please enter an email address." }, { status: 400 });
   }
 
-  if (isDemoBypassEmail(email)) {
-    const resolved = buildDemoBypassSession();
-    const cookie = await getSession(request.headers.get("Cookie"));
-    cookie.set("customerId", resolved.customerId);
-    cookie.set("apiToken", resolved.apiToken);
-    cookie.set("apiTokenExpiresAt", resolved.apiTokenExpiresAt);
-    cookie.set("email", resolved.email);
-    const destination = next && next.startsWith("/") ? next : `/${resolved.customerId}`;
-    return redirect(destination, { headers: { "Set-Cookie": await commitSession(cookie) } });
-  }
-
   let sessionToken: string;
   try {
     sessionToken = await startPasswordlessLogin(email);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Could not start sign-in.";
-    return json({ error: message }, { status: 502 });
+  } catch {
+    return json(
+      {
+        error:
+          "We couldn't find an account for that email. New to Slimmer Meals? Visit slimmermeals.com to get started.",
+      },
+      { status: 502 }
+    );
   }
 
   const cookie = await getSession(request.headers.get("Cookie"));
@@ -84,11 +76,13 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-warm-lg border border-stone-100 p-8 sm:p-10">
           <div className="flex justify-center mb-6">
-            <img
-              src="/logo.svg"
-              alt="Slimmer Meals"
-              className="h-14 sm:h-16 w-auto"
-            />
+            <a href="https://slimmermeals.com" aria-label="Back to slimmermeals.com">
+              <img
+                src="/logo.svg"
+                alt="Slimmer Meals"
+                className="h-14 sm:h-16 w-auto"
+              />
+            </a>
           </div>
 
           <div className="text-center mb-7">
@@ -149,14 +143,19 @@ export default function LoginPage() {
               <p className="text-sm text-red-700">{actionData.error}</p>
             </div>
           )}
+
+          <div className="mt-5 text-center">
+            <a
+              href="https://slimmermeals.com"
+              className="text-sm text-stone-500 hover:text-brand-700 transition-colors"
+            >
+              ← Back to homepage
+            </a>
+          </div>
         </div>
 
         <div className="mt-6 flex items-center justify-center gap-4 text-xs text-stone-400">
           <span>Real food. Real fuel. Delivered.</span>
-          <span aria-hidden="true">·</span>
-          <Link to="/merchant" className="hover:text-brand-700 transition-colors">
-            Merchant portal →
-          </Link>
         </div>
       </div>
     </div>

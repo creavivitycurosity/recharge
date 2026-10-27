@@ -1,5 +1,5 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData, useLocation, useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import {
@@ -43,6 +43,11 @@ import {
   getAddonCollectionIds,
   saveAddonCollectionIds,
 } from "~/lib/addon-collections.server";
+import {
+  getMerchantPassword,
+  isMerchantUnlocked,
+  unlockMerchantSession,
+} from "~/lib/merchant-auth.server";
 import { DEFAULT_DELIVERY_OFFSET, DEFAULT_MODIFICATION_WINDOW } from "~/lib/bundle-config";
 import type { BundleCollection } from "~/lib/types";
 
@@ -80,6 +85,15 @@ type BundleVariantOption = {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
+
+  if (!(await isMerchantUnlocked(request))) {
+    return json({
+      locked: true as const,
+      notConfigured: getMerchantPassword() === null,
+      gateError: url.searchParams.get("gate") === "wrong",
+    });
+  }
+
   const requestedBundleVariantId = url.searchParams.get("bundle");
 
   const [shopifyCollections, bundleProducts] = await Promise.all([
@@ -229,6 +243,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
+
+  if (intent === "merchant_unlock") {
+    const password = getMerchantPassword();
+    const supplied = String(formData.get("password") ?? "");
+    if (!password || supplied !== password) {
+      return redirect("/merchant?gate=wrong");
+    }
+    return redirect("/merchant", {
+      headers: { "Set-Cookie": await unlockMerchantSession(request) },
+    });
+  }
+
+  if (!(await isMerchantUnlocked(request))) {
+    return json({ error: "Merchant portal is locked." }, { status: 403 });
+  }
+
   const rawBundleVariantId = formData.get("bundleVariantId");
   const bundleVariantId =
     typeof rawBundleVariantId === "string" ? rawBundleVariantId.trim() : "";
@@ -446,7 +476,74 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function MerchantPage() {
+function MerchantGate({ notConfigured, gateError }: { notConfigured: boolean; gateError: boolean }) {
+  return (
+    <div className="min-h-screen bg-cream bg-grain flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-warm-lg border border-stone-100 p-8 sm:p-10">
+          <div className="flex justify-center mb-6">
+            <img src="/logo.svg" alt="Slimmer Meals" className="h-14 w-auto" />
+          </div>
+          <div className="text-center mb-7">
+            <h1 className="text-2xl font-display font-bold text-stone-900 tracking-tight">
+              Merchant Portal
+            </h1>
+            <p className="text-stone-500 mt-1.5 text-sm">
+              This area is for store staff. Enter the merchant password to continue.
+            </p>
+          </div>
+          {notConfigured ? (
+            <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+              No merchant password is configured. Set the MERCHANT_PASSWORD environment variable in
+              Render, then reload this page.
+            </div>
+          ) : (
+            <form method="post" className="space-y-4">
+              <input type="hidden" name="intent" value="merchant_unlock" />
+              <div>
+                <label htmlFor="merchant-password" className="block text-sm font-medium text-stone-700 mb-1.5">
+                  Password
+                </label>
+                <input
+                  id="merchant-password"
+                  name="password"
+                  type="password"
+                  autoFocus
+                  required
+                  className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-shadow"
+                />
+              </div>
+              <button type="submit" className="btn-primary w-full py-3.5">
+                Unlock
+              </button>
+              {gateError && (
+                <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  Incorrect password. Please try again.
+                </div>
+              )}
+            </form>
+          )}
+          <p className="mt-6 text-center text-xs text-stone-400">
+            Staff access only — customers sign in at account.slimmermeals.com
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MerchantRoute() {
+  const data = useLoaderData<typeof loader>();
+  if ("locked" in data) {
+    return <MerchantGate notConfigured={data.notConfigured} gateError={data.gateError} />;
+  }
+  return <MerchantPage />;
+}
+
+function MerchantPage() {
+  const data = useLoaderData<typeof loader>();
+  // Only rendered once unlocked (see MerchantRoute); this narrows the loader type.
+  if ("locked" in data) return null;
   const {
     weekStarts,
     weekStartDayJs,
@@ -460,7 +557,7 @@ export default function MerchantPage() {
     modificationWindowDays,
     addonCollectionIds,
     plansError,
-  } = useLoaderData<typeof loader>();
+  } = data;
   const [activeWeek, setActiveWeek] = useState(weekStarts[0]);
   const [activeView, setActiveView] = useState<ViewMode>("assign");
 

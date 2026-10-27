@@ -1747,13 +1747,13 @@ function Header({
       <header className="bg-white border-b border-stone-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center group">
+            <a href="https://slimmermeals.com" className="flex items-center group" aria-label="Back to slimmermeals.com">
               <img
                 src="/logo.svg"
                 alt="Slimmer Meals"
                 className="h-12 sm:h-14 w-auto group-hover:scale-[1.02] transition-transform"
               />
-            </Link>
+            </a>
             {refreshing && (
               <span className="text-xs text-stone-400 animate-pulse-soft ml-2">Syncing...</span>
             )}
