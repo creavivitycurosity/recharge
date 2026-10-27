@@ -39,7 +39,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json(
       {
         error:
-          "We couldn't find an account for that email. New to Slimmer Meals? Visit slimmermeals.com to get started.",
+          "We couldn't find an account with that email. Double-check the spelling — or if you haven't started a plan with us yet, use the link below to head back and choose your meals.",
       },
       { status: 502 }
     );
