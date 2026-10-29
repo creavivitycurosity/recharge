@@ -2,9 +2,11 @@ import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from "@remi
 import { json, redirect } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation, useSearchParams } from "@remix-run/react";
 import {
+  buildDemoBypassSession,
   commitSession,
   getOptionalCustomer,
   getSession,
+  isDemoBypassEmail,
   startPasswordlessLogin,
 } from "~/lib/auth.server";
 
@@ -30,6 +32,21 @@ export async function action({ request }: ActionFunctionArgs) {
 
   if (!email) {
     return json({ error: "Please enter an email address." }, { status: 400 });
+  }
+
+  // TEMPORARY for the client demo call — remove right after (see HANDOFF.md).
+  if (isDemoBypassEmail(email)) {
+    const resolved = buildDemoBypassSession();
+    const cookie = await getSession(request.headers.get("Cookie"));
+    cookie.set("customerId", resolved.customerId);
+    cookie.set("apiToken", resolved.apiToken);
+    cookie.set("apiTokenExpiresAt", resolved.apiTokenExpiresAt);
+    cookie.set("email", resolved.email);
+    cookie.unset("pendingEmail");
+    cookie.unset("pendingSessionToken");
+    return redirect(`/${resolved.customerId}`, {
+      headers: { "Set-Cookie": await commitSession(cookie) },
+    });
   }
 
   let sessionToken: string;
